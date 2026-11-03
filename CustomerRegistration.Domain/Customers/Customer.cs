@@ -1,5 +1,5 @@
 ﻿
-namespace CustomerRegistration.Domain.Models;
+namespace CustomerRegistration.Domain.Customers;
 
 public class Customer(Guid id, string name, string emailAddress, string phoneNumber, string organizationNumber, string password)
 {
