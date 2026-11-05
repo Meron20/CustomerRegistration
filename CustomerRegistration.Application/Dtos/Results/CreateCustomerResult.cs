@@ -1,5 +1,5 @@
 ﻿
-using CustomerRegistration.Domain.Models;
+using CustomerRegistration.Domain.Customers;
 
 namespace CustomerRegistration.Application.Dtos.Results;
 
