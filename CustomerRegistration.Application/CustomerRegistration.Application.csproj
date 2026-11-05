@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CustomerRegistration.Domain\CustomerRegistration.Domain.csproj" />
+    <ProjectReference Include="..\CustomerRegistration.Infrastructure\CustomerRegistration.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
