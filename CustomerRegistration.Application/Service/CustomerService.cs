@@ -15,8 +15,13 @@ public class CustomerService(ICustomerRepository customerRepository) : ICustomer
 
             var id = Guid.NewGuid();
 
-            customer = new Customer(id, request.Name, request.EmailAddress, request.PhoneNumber, request.OrganizationNumber, request.Password);
-
+            customer = new Customer
+                (id,
+                request.Name, 
+                request.EmailAddress,
+                request.PhoneNumber, 
+                request.OrganizationNumber, 
+                request.Password );
         }
         catch (Exception ex)
         {
@@ -28,12 +33,11 @@ public class CustomerService(ICustomerRepository customerRepository) : ICustomer
         return saved
             ? new CreateCustomerResult(true, customer, null)
             : new CreateCustomerResult(false, null, "Unable to save customer");
-
-
     }
 
     public GetAllCustomersResult GetAllCustomers()
     {
-      
+        var customers = customerRepository.GetAll();
+        return new GetAllCustomersResult(true, customers, null);
     }
 }
