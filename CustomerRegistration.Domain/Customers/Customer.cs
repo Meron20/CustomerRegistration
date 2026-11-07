@@ -3,14 +3,14 @@ namespace CustomerRegistration.Domain.Customers;
 
 public class Customer(Guid id, string name, string emailAddress, string phoneNumber, string organizationNumber, string password)
 {
-    public Guid Id { get; private set; } = ValidteId(id);
+    public Guid Id { get; private set; } = ValidateId(id);
     public string Name { get; private set; } = ValidateAndNormalizeName(name);
     public string EmailAddress { get; private set; } = ValidateAndNormalizeEmailAddress(emailAddress);
     public string PhoneNumber { get; private set; } = ValidateAndNormalizePhoneNumber(phoneNumber);
     public string OrganizationNumber { get; private set; } = ValidateAndNormalizeOrganizationNumber(organizationNumber);
     public string Password { get; private set; } = ValidateAndNormalizePassword(password);
 
-    private static Guid ValidteId(Guid id)
+    private static Guid ValidateId(Guid id)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Customer id is required");
