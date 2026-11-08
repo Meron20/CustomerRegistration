@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CustomerRegistration.Application.Dtos.Requests;
 using CustomerRegistration.Application.Service;
+using Microsoft.UI.Xaml.Controls;
 using System;
 
 namespace CustomerRegistration.Presentation.ViewModels;
@@ -29,6 +30,15 @@ public partial class CreateCustomerViewModel(ICustomerService customerService) :
     public partial string Message { get; set; } = string.Empty;
 
     [ObservableProperty]
+    public partial bool IsMessageOpen { get; set; }
+
+    [ObservableProperty]
+    public partial string MessageTitle { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial InfoBarSeverity MessageType { get; set; } = InfoBarSeverity.Informational;
+
+    [ObservableProperty]
     public partial string PageTitle { get; set; } = "Create customer account";
 
 
@@ -47,7 +57,6 @@ public partial class CreateCustomerViewModel(ICustomerService customerService) :
     [RelayCommand]
     private void CreateAccount()
     {
-        Message = string.Empty;
 
         {
             var request = new CreateCustomerRequest(
@@ -62,13 +71,18 @@ public partial class CreateCustomerViewModel(ICustomerService customerService) :
             if (result.Succeeded)
             {
                 ClearForm();
-                Message = "Account created";
+                MessageType = InfoBarSeverity.Success;
+                MessageTitle = "Account created";
+                Message = "The customer account was created successfully.";
             }
             else
             {
+                MessageType = InfoBarSeverity.Error;
+                MessageTitle = "Could not create account";
                 Message = result.ErrorMessage ?? "Something went wrong.";
             }
-
+              
+            IsMessageOpen = true;
 
         }
     }
