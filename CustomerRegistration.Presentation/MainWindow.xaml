@@ -9,7 +9,7 @@
     mc:Ignorable="d"
     Title="CustomerRegistration">
 
-    <StackPanel Padding="32" Spacing="12" MaxWidth="420" HorizontalAlignment="Center">
+    <StackPanel Padding="32" Spacing="12" Width="420" HorizontalAlignment="Center">
 
         <TextBlock Text="{x:Bind ViewModel.PageTitle, Mode=OneWay}"
                    Style="{StaticResource TitleTextBlockStyle}" />
@@ -34,8 +34,11 @@
                 Style="{StaticResource AccentButtonStyle}"
                 Command="{x:Bind ViewModel.CreateAccountCommand}" />
 
-        <TextBlock Text="{x:Bind ViewModel.Message, Mode=OneWay}"
-                   TextWrapping="Wrap" />
+        <InfoBar IsOpen="{x:Bind ViewModel.IsMessageOpen, Mode=TwoWay}"
+                 Severity="{x:Bind ViewModel.MessageType, Mode=OneWay}"
+                 Title="{x:Bind ViewModel.MessageTitle, Mode=OneWay}"
+                 Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+                 IsClosable="True" />
     </StackPanel>
 </Window>
 

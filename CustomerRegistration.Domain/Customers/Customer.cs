@@ -1,12 +1,12 @@
 ﻿
 namespace CustomerRegistration.Domain.Customers;
 
-public class Customer(Guid id, string name, string emailAddress, string phoneNumber, string organizationNumber, string password)
+public class Customer(Guid id, string name, string emailAddress, string? phoneNumber, string organizationNumber, string password)
 {
     public Guid Id { get; private set; } = ValidteId(id);
     public string Name { get; private set; } = ValidateAndNormalizeName(name);
     public string EmailAddress { get; private set; } = ValidateAndNormalizeEmailAddress(emailAddress);
-    public string PhoneNumber { get; private set; } = ValidateAndNormalizePhoneNumber(phoneNumber);
+    public string? PhoneNumber { get; private set; } = ValidateAndNormalizePhoneNumber(phoneNumber);
     public string OrganizationNumber { get; private set; } = ValidateAndNormalizeOrganizationNumber(organizationNumber);
     public string Password { get; private set; } = ValidateAndNormalizePassword(password);
 
@@ -39,7 +39,7 @@ public class Customer(Guid id, string name, string emailAddress, string phoneNum
         return emailAddress.Trim().ToLower();
     }
 
-    private static string ValidateAndNormalizePhoneNumber(string phoneNumber)
+    private static string? ValidateAndNormalizePhoneNumber(string? phoneNumber)
     {
         if (string.IsNullOrWhiteSpace(phoneNumber))
             throw new ArgumentException("Phone number is required");
@@ -54,7 +54,7 @@ public class Customer(Guid id, string name, string emailAddress, string phoneNum
 
      var normalized = organizationNumber.Trim().Replace("-", "").Replace(" ", "");
 
-     if (normalized.Length != 10)
+     if (normalized.Length != 10 || !normalized.All(char.IsDigit))
          throw new ArgumentException("Organization number must contain 10 digits.");
 
         return normalized;
