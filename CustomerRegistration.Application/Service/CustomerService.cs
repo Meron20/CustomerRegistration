@@ -23,7 +23,7 @@ public class CustomerService(ICustomerRepository customerRepository) : ICustomer
                 request.OrganizationNumber, 
                 request.Password );
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
             return new CreateCustomerResult(false, null, ex.Message);
         }
@@ -32,7 +32,7 @@ public class CustomerService(ICustomerRepository customerRepository) : ICustomer
 
         return saved
             ? new CreateCustomerResult(true, customer, null)
-            : new CreateCustomerResult(false, null, "Unable to save customer");
+            : new CreateCustomerResult(false, null, "Email address or organization number is already in use.");
     }
 
     public GetAllCustomersResult GetAllCustomers()
