@@ -1,0 +1,88 @@
+@startuml
+title Create customer account - sequence diagram (final)
+
+hide footbox
+autonumber
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 120
+
+actor "User" as User
+boundary "mainWindow\n: MainWindow" as View
+participant "viewModel\n: CreateCustomerViewModel" as VM
+control "customerService\n: CustomerService" as Service
+participant "customerRepository\n: InMemoryCustomerRepository" as Repo
+collections "Customers : List<Customer>\n(InMemoryCustomerStore)" as Store
+
+== Fill in the form ==
+User -> View : Enter name, email address, phone number,\norganization number and password
+View -> VM : Name, EmailAddress, PhoneNumber,\nOrganizationNumber, Password\n(updated by TwoWay binding)
+
+== Create account ==
+User -> View : Click "Create account"
+View -> VM : CreateAccountCommand.Execute()
+activate VM
+VM -> VM : CreateAccount()
+VM -> VM : IsMessageOpen = false
+VM -> VM : request = new CreateCustomerRequest(Name, EmailAddress,\nPhoneNumber, OrganizationNumber, Password)
+
+VM -> Service : CreateCustomer(request)
+activate Service
+Service -> Service : ArgumentNullException.ThrowIfNull(request)
+
+group try
+  Service -> Service : id = Guid.NewGuid()
+
+  create entity "customer\n: Customer" as Customer
+  Service -> Customer : new Customer(id, request.Name, request.EmailAddress,\nrequest.PhoneNumber, request.OrganizationNumber, request.Password)
+  activate Customer
+  Customer -> Customer : ValidateId(id)
+  Customer -> Customer : ValidateAndNormalizeName(name)
+  Customer -> Customer : ValidateAndNormalizeEmailAddress(emailAddress)
+  Customer -> Customer : ValidateAndNormalizePhoneNumber(phoneNumber)
+  Customer -> Customer : ValidateAndNormalizeOrganizationNumber(organizationNumber)
+  Customer -> Customer : ValidateAndNormalizePassword(password)
+end
+
+alt catch ArgumentException ex (a value is missing or invalid)
+  Customer --> Service : ArgumentException(message)
+  deactivate Customer
+  Service --> VM : new CreateCustomerResult(false, null, ex.Message)
+
+else all values are valid
+  Customer --> Service : customer
+  Service -> Repo : Create(customer)
+  activate Repo
+  Repo -> Repo : ArgumentNullException.ThrowIfNull(customer)
+  Repo -> Store : Any(c => c.EmailAddress == customer.EmailAddress\n|| c.OrganizationNumber == customer.OrganizationNumber)
+  Store --> Repo : alreadyExists : bool
+
+  alt alreadyExists == true
+    Repo --> Service : false (customer not saved)
+    Service --> VM : new CreateCustomerResult(false, null,\n"Email address or organization number is already in use.")
+
+  else alreadyExists == false
+    Repo -> Store : Add(customer)
+    Repo --> Service : true (customer saved)
+    Service --> VM : new CreateCustomerResult(true, customer, null)
+  end
+  deactivate Repo
+end
+deactivate Service
+
+alt result.Succeeded == true
+  VM -> VM : ClearForm()
+  VM -> VM : MessageType = InfoBarSeverity.Success\nMessageTitle = "Account created"\nMessage = "The customer account was created successfully."
+else result.Succeeded == false
+  VM -> VM : MessageType = InfoBarSeverity.Error\nMessageTitle = "Could not create account"\nMessage = result.ErrorMessage
+end
+VM -> VM : IsMessageOpen = true
+VM --> View : PropertyChanged\n(binding updates the window)
+deactivate VM
+
+alt result.Succeeded == true
+  View --> User : Green InfoBar "Account created",\nform cleared (AC1)
+else result.Succeeded == false
+  View --> User : Red InfoBar with the error message,\ninput kept (AC2 / AC3)
+end
+@enduml

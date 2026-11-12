@@ -1,0 +1,48 @@
+@startuml
+title Create customer account - sequence diagram
+autonumber
+
+actor Customer
+boundary RegistrationView
+control CustomerService
+participant CustomerRepository
+database Database
+
+Customer -> RegistrationView : Enter name, orgNumber, email, phone and password
+Customer -> RegistrationView : Click "Create account"
+RegistrationView -> CustomerService : CreateAccount(name, orgNumber, email, phone, password)
+activate CustomerService
+
+CustomerService -> CustomerService : Validate input
+
+alt Invalid input
+  CustomerService --> RegistrationView : Result with validation errors
+  RegistrationView --> Customer : Show errors next to the fields (AC3)
+
+else Valid input
+  CustomerService -> CustomerRepository : ExistsByEmailOrOrgNumber(email, orgNumber)
+  activate CustomerRepository
+  CustomerRepository -> Database : Find customer by email or orgNumber
+  Database --> CustomerRepository : Found / not found
+  CustomerRepository --> CustomerService : true / false
+  deactivate CustomerRepository
+
+  alt Email or orgNumber already exists
+    CustomerService --> RegistrationView : Result with "customer already exists"
+    RegistrationView --> Customer : Show that email or orgNumber is already used (AC2)
+
+  else New customer
+    CustomerService -> CustomerService : Create Customer
+    CustomerService -> CustomerRepository : Add(customer)
+    activate CustomerRepository
+    CustomerRepository -> Database : Save customer
+    Database --> CustomerRepository : Saved
+    CustomerRepository --> CustomerService : OK
+    deactivate CustomerRepository
+    CustomerService --> RegistrationView : Result: account created
+    RegistrationView --> Customer : Show "Account created" (AC1)
+  end
+end
+
+deactivate CustomerService
+@enduml

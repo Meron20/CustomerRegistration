@@ -1,0 +1,166 @@
+@startuml class-diagram-create-customer-account-detailed
+title Create customer account - class diagram
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam wrapWidth 220
+skinparam noteFontSize 11
+hide empty members
+
+' ===================== PRESENTATION =====================
+package "CustomerRegistration.Presentation" {
+
+  class App {
+    - _services : IServiceProvider
+    - _window : Window [0..1]
+    --
+    + App()
+    # OnLaunched(args : LaunchActivatedEventArgs) : void
+  }
+
+  class MainWindow {
+    + ViewModel : CreateCustomerViewModel {readOnly}
+    --
+    + MainWindow(viewModel : CreateCustomerViewModel)
+  }
+
+  class CreateCustomerViewModel {
+    - customerService : ICustomerService
+    --
+    + Name : string
+    + EmailAddress : string
+    + PhoneNumber : string
+    + OrganizationNumber : string
+    + Password : string
+    + PageTitle : string
+    + Message : string
+    + MessageTitle : string
+    + MessageType : InfoBarSeverity
+    + IsMessageOpen : bool
+    + CreateAccountCommand : IRelayCommand
+    --
+    + CreateCustomerViewModel(customerService : ICustomerService)
+    - CreateAccount() : void
+    + ClearForm() : void
+  }
+
+  class ObservableObject <<CommunityToolkit>>
+
+  note "Dependency injection:\nICustomerRepository -> InMemoryCustomerRepository (Singleton)\nICustomerService -> CustomerService (Singleton)\nViewModel and MainWindow (Transient)" as NoteApp
+  NoteApp .. App
+
+  note "[ObservableProperty] creates the properties.\n[RelayCommand] creates CreateAccountCommand.\nSuccess: green InfoBar, form cleared.\nError: red InfoBar, input kept." as NoteViewModel
+  NoteViewModel .. CreateCustomerViewModel
+}
+
+' ===================== APPLICATION =====================
+package "CustomerRegistration.Application" {
+
+  interface ICustomerService {
+    + CreateCustomer(request : CreateCustomerRequest) : CreateCustomerResult
+    + GetAllCustomers() : GetAllCustomersResult
+  }
+
+  class CustomerService {
+    - customerRepository : ICustomerRepository
+    --
+    + CustomerService(customerRepository : ICustomerRepository)
+    + CreateCustomer(request : CreateCustomerRequest) : CreateCustomerResult
+    + GetAllCustomers() : GetAllCustomersResult
+  }
+
+  class CreateCustomerRequest << (R, #F4B183) record >> {
+    + Name : string
+    + EmailAddress : string
+    + PhoneNumber : string
+    + OrganizationNumber : string
+    + Password : string
+  }
+
+  class CreateCustomerResult << (R, #F4B183) record >> {
+    + Succeeded : bool
+    + Customer : Customer [0..1]
+    + ErrorMessage : string [0..1]
+  }
+
+  class GetAllCustomersResult << (R, #F4B183) record >> {
+    + Succeeded : bool
+    + Customers : IReadOnlyList<Customer>
+    + ErrorMessage : string [0..1]
+  }
+
+  note "Creates Customer inside try/catch.\nArgumentException: Succeeded = false (AC3).\nCreate() == false: already in use (AC2)." as NoteService
+  NoteService .. CustomerService
+}
+
+' ===================== DOMAIN =====================
+package "CustomerRegistration.Domain" {
+
+  class Customer {
+    + Id : Guid {readOnly}
+    + Name : string {readOnly}
+    + EmailAddress : string {readOnly}
+    + PhoneNumber : string {readOnly}
+    + OrganizationNumber : string {readOnly}
+    + Password : string {readOnly}
+    --
+    + Customer(id, name, emailAddress, phoneNumber, organizationNumber, password)
+    - {static} ValidateId(id : Guid) : Guid
+    - {static} ValidateAndNormalizeName(name : string) : string
+    - {static} ValidateAndNormalizeEmailAddress(emailAddress : string) : string
+    - {static} ValidateAndNormalizePhoneNumber(phoneNumber : string) : string
+    - {static} ValidateAndNormalizeOrganizationNumber(organizationNumber : string) : string
+    - {static} ValidateAndNormalizePassword(password : string) : string
+  }
+
+  interface ICustomerRepository {
+    + Create(customer : Customer) : bool
+    + GetAll() : IReadOnlyList<Customer>
+  }
+
+  note "The constructor validates and normalizes every value.\nInvalid input throws ArgumentException (AC3).\nEmail: lowercase. OrgNumber: exactly 10 digits.\nPassword: at least 6 characters." as NoteCustomer
+  NoteCustomer .. Customer
+}
+
+' ===================== INFRASTRUCTURE =====================
+package "CustomerRegistration.Infrastructure" {
+
+  class InMemoryCustomerRepository {
+    + Create(customer : Customer) : bool
+    + GetAll() : IReadOnlyList<Customer>
+  }
+
+  class InMemoryCustomerStore << (S, #A9D18E) static >> {
+    + {static} Customers : List<Customer>
+  }
+
+  note "Create() returns false if the email or\norganization number already exists (AC2),\notherwise saves and returns true (AC1)." as NoteRepository
+  NoteRepository .. InMemoryCustomerRepository
+}
+
+' ===================== RELATIONS =====================
+
+' Inheritance / implementation
+CreateCustomerViewModel --|> ObservableObject
+CustomerService ..|> ICustomerService : implements
+InMemoryCustomerRepository ..|> ICustomerRepository : implements
+
+' Associations (kept as fields)
+CustomerService --> "1" ICustomerRepository : uses
+CreateCustomerViewModel --> "1" ICustomerService : uses
+MainWindow --> "1" CreateCustomerViewModel : ViewModel
+
+' Dependencies (used / created for a moment)
+CustomerService ..> CreateCustomerRequest : receives
+CustomerService ..> CreateCustomerResult : returns
+CustomerService ..> GetAllCustomersResult : returns
+CustomerService ..> Customer : creates
+CreateCustomerViewModel ..> CreateCustomerRequest : creates
+CreateCustomerViewModel ..> CreateCustomerResult : reads
+InMemoryCustomerRepository ..> InMemoryCustomerStore : saves in
+App ..> MainWindow : creates (via DI)
+
+' Data
+InMemoryCustomerStore o-- "0..*" Customer : Customers
+CreateCustomerResult --> "0..1" Customer
+GetAllCustomersResult --> "0..*" Customer
+@enduml

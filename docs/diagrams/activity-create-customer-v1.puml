@@ -1,0 +1,31 @@
+@startuml
+title Create customer account
+
+|Customer|
+start
+:Open the registration page;
+repeat
+  |Customer|
+  :Enter name, organization number, email, phone and password;
+  :Submit the form;
+  |System|
+  :Check that all fields are filled in and valid;
+  if (All fields filled in and valid?) then (no)
+    :Show error message for the wrong field,
+    e.g. "Organization number must contain exactly 10 digits." (AC3);
+  else (yes)
+    :Check if email or organization number already exists;
+    if (Email or organization number already exists?) then (yes)
+      :Show error message
+      "Email address or organization number is already in use." (AC2);
+    else (no)
+      :Create customer account (AC1);
+    endif
+  endif
+repeat while (Account created?) is (no) not (yes)
+|System|
+:Show "Account created";
+|Customer|
+:See that the account is created;
+stop
+@enduml

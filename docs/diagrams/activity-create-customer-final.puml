@@ -1,0 +1,38 @@
+@startuml activity-create-customer-account-final
+title Create customer account
+
+|Customer|
+start
+:Open the registration page;
+repeat
+  |Customer|
+  :Enter name, email address, phone number,
+  organization number and password;
+  :Click "Create account";
+  |System|
+  :Remove extra spaces and dashes,
+  and make the email address lowercase;
+  :Check the information one field at a time
+  (name, email, phone, organization number, password);
+  if (Is all information filled in and valid?) then (no)
+    :Show a red message that explains
+    what is wrong (AC3);
+    :Keep the information the customer entered;
+  else (yes)
+    :Check if the email address or the organization
+    number is already registered;
+    if (Already registered?) then (yes)
+      :Show a red message: "Email address or
+      organization number is already in use" (AC2);
+      :Keep the information the customer entered;
+    else (no)
+      :Save the new customer account (AC1);
+    endif
+  endif
+repeat while (Is the account created?) is (no) not (yes)
+:Clear the form;
+:Show a green message "Account created";
+|Customer|
+:See that the account is created;
+stop
+@enduml
